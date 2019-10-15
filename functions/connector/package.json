@@ -1,15 +1,18 @@
 {
-  "name": "smartthings-lifx-demo",
+  "name": "ShellySmartThing",
   "version": "1.0.0",
-  "description": "SmartThings/LIFX device integration",
+  "description": "SmartThings/Shelly device integration",
+  "repository": {
+    "url": "https: //github.com/SRGDamia1/example-lifx-lambda-connector.git"
+  },
   "main": "index.js",
-  "author": "SmartThings",
+  "author": "Sara Damiano",
   "license": "ISC",
   "dependencies": {
-    "bluebird": "^3.5.0",
+    "aws-sdk": "^2.549.0",
+    "bluebird": "^3.7.1",
     "config": "^1.26.2",
     "request": "^2.81.0",
-    "request-promise": "^4.2.1",
-    "aws-sdk": "^2.211.0"
+    "request-promise": "^4.2.1"
   }
 }
