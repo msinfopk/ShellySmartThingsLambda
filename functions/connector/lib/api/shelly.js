@@ -14,13 +14,13 @@ const shellyOauthEndpoint = config.get('shelly.oauthEndpoint');
  */
 module.exports = {
 
-    /**
-     * Handles OAuth2 callback from Shelly, making request to exchange the code for access and refresh tokens
-     *
-     * @param installedAppId
-     * @param queryString
-     * @returns {*}
-     */
+    // /**
+    //  * Handles OAuth2 callback from Shelly, making request to exchange the code for access and refresh tokens
+    //  *
+    //  * @param installedAppId
+    //  * @param queryString
+    //  * @returns {*}
+    //  */
     // handleOauthCallback: function (installedAppId, queryString) {
     //     let params = qs.parse(queryString);
     //     let req = {
@@ -48,7 +48,7 @@ module.exports = {
     // },
 
     /**
-     * Returns a list of lights in a location
+     * Returns a list of shelly devices
      *
      * @param token Shelly access token
      * @param callback Function called with list of lights
