@@ -9,17 +9,13 @@
     "colorTemp": "REPLACE WITH YOUR DEVICE PROFILE ID FROM DEV WORKSPACE",
     "white": "REPLACE WITH YOUR DEVICE PROFILE ID FROM DEV WORKSPACE"
   },
-  "lifx": {
-    "apiEndpoint": "https://api.lifx.com/v1",
-    "oauthEndpoint": "https://cloud.lifx.com/oauth",
+  "shelly": {
+    "apiEndpoint": "https://shelly-4-eu.shelly.cloud",
+    "oauthEndpoint": "",
     "clientId": "",
     "clientSecret": ""
   },
   "smartThings": {
     "apiEndpoint": "https://api.smartthings.com"
-  },
-  "dynamo": {
-    "tableName": "CloudConnectors",
-    "region": "us-east-1"
   }
 }

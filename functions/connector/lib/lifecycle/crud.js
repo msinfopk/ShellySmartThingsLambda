@@ -1,8 +1,7 @@
 'use strict';
 
-const db = require('../local/db');
 const log = require('../local/log');
-const lifx = require('../api/lifx');
+const shelly = require('../api/shelly');
 const st = require('../api/st');
 const util = require('../api/util');
 
@@ -39,14 +38,12 @@ module.exports = {
      * the devices.
      */
     uninstall: function(uninstallData) {
-        db.delete(uninstallData.installedApp.installedAppId, function() {
-            log.debug(`${uninstallData.installedApp.installedAppId} connector deleted`);
-        });
+        log.debug(`${uninstallData.installedApp.installedAppId} connector deleted`);
     }
 };
 
 /**
- * Iterates over device lists from SmartThings and LIFX, creating and deleting devices as necessary.
+ * Iterates over device lists from SmartThings and Shelly, creating and deleting devices as necessary.
  *
  * @param params Either installData or updateData
  * @param existingDevices List current SmartThings devices for this connector
@@ -56,14 +53,13 @@ function updateDevices(params, existingDevices) {
     let locationId = params.installedApp.locationId;
     let config = params.installedApp.config;
 
-    if (config && config.lifxLocationId) {
-        // Get the stored LIFX access token (from OAuth journey)
+    if (config) {
+        // Get the stored Shelly access token (from OAuth journey)
         db.get(installedAppId, function (state) {
 
-            // Query LIFX for list of lights in the selected location
-            let lifxLocationId = config.lifxLocationId[0].stringConfig.value;
-            let lifxAccessToken = util.lifxAccessToken(state, config);
-            lifx.getLights(lifxAccessToken, lifxLocationId, function (lights) {
+            // Query Shelly for list of lights in the selected location
+            let shellyAccessToken = util.shellyAccessToken(state, config);
+            shelly.getShellys(shellyAccessToken, function (lights) {
                 util.reconcileDeviceLists(params.authToken, locationId, installedAppId, lights, existingDevices);
             });
         });

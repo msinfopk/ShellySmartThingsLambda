@@ -2,7 +2,7 @@
 
 const log = require('../local/log');
 const st = require('./st');
-const lifx = require('../api/lifx');
+const shelly = require('./shelly');
 const config = require('config');
 const deviceProfiles = config.get('deviceProfiles');
 
@@ -12,19 +12,19 @@ const deviceProfiles = config.get('deviceProfiles');
 module.exports = {
 
     /**
-     * Compares device lists from LIFX and SmartThings, creating and deleting devices as necessary
+     * Compares device lists from Shelly and SmartThings, creating and deleting devices as necessary
      *
      * @param token SmartThings access token
      * @param locationId SmartThings location ID
-     * @param lifxDevices List of devices from LIFX
+     * @param shellyDevices List of devices from Shelly
      * @param smartThingsDevices List of devices from SmartThings
      */
-    reconcileDeviceLists: function (token, locationId, installedAppId, lifxDevices, smartThingsDevices) {
+    reconcileDeviceLists: function (token, locationId, installedAppId, shellyDevices, smartThingsDevices) {
         // Iterate over lights to see if any are missing from SmartThings and need to be added
-        lifxDevices.forEach(function (light) {
+        shellyDevices.forEach(function (light) {
             if (!smartThingsDevices.find(function (device) { return device.app.externalId == light.id; })) {
 
-                // Device from LIFX not found in SmartThings, add it
+                // Device from Shelly not found in SmartThings, add it
                 let map = {
                     label: light.label,
                     profileId: deviceProfileId(light),
@@ -35,19 +35,19 @@ module.exports = {
 
                 st.createDevice(token, map).then(function (data) {
                     log.debug("created device " + data.deviceId);
-                    log.info(JSON.stringify(lifx.initialLightEvents(light)));
-                    st.sendEvents(token, data.deviceId, lifx.initialLightEvents(light))
+                    log.info(JSON.stringify(shelly.initialLightEvents(light)));
+                    st.sendEvents(token, data.deviceId, shelly.initialLightEvents(light))
                 }).catch(function (err) {
                     log.error(`${err}  creating device`);
                 });
             }
         });
 
-        // Iterate over all lights in SmartThings and delete any that are missing from LIFX
+        // Iterate over all lights in SmartThings and delete any that are missing from Shelly
         smartThingsDevices.forEach(function(device) {
-            if (!lifxDevices.find(function(light) { return device.app.externalId == light.id; })) {
+            if (!shellyDevices.find(function(light) { return device.app.externalId == light.id; })) {
 
-                // Device in SmartThings but not LIFX, delete it
+                // Device in SmartThings but not Shelly, delete it
                 st.deleteDevice(token, device.deviceId).then(function(data) {
                     log.debug(`deleted device ${device.deviceId}`);
                 }).catch(function (err) {
@@ -58,20 +58,20 @@ module.exports = {
     },
 
     /**
-     * Returns LIFX access token, which is in Redis persisted state when using OAuth with clientId and clientSecret
+     * Returns Shelly access token, which is in Redis persisted state when using OAuth with clientId and clientSecret
      * or in a configuration setting when users enter personal tokens directly
      *
      * @param state
      * @param config
      */
-    lifxAccessToken: function(state, config) {
-        if (state && state.lifxAccessToken) {
-            //log.debug(`lifxAccessToken, state=${JSON.stringify(state)}`);
-            return state.lifxAccessToken;
+    shellyAccessToken: function(state, config) {
+        if (state && state.shellyAccessToken) {
+            //log.debug(`shellyAccessToken, state=${JSON.stringify(state)}`);
+            return state.shellyAccessToken;
         }
         else {
-            //log.debug(`lifxAccessToken, config=${JSON.stringify(config)}`);
-            return config.lifxAccessToken[0].stringConfig.value;
+            //log.debug(`shellyAccessToken, config=${JSON.stringify(config)}`);
+            return config.shellyAccessToken[0].stringConfig.value;
         }
     }
 };

@@ -4,91 +4,59 @@ const qs = require('querystring');
 const rp = require('request-promise');
 const log = require('../local/log');
 const config = require('config');
-const lifxClientId = config.get('lifx.clientId');
-const lifxClientSecret = config.get('lifx.clientSecret');
-const lifxApiEndpoint = config.get('lifx.apiEndpoint');
-const lifxOauthEndpoint = config.get('lifx.oauthEndpoint');
+const shellyApiEndpoint = config.get('shelly.apiEndpoint');
+const shellyClientSecret = config.get('shelly.clientSecret');
+const shellyApiEndpoint = config.get('shelly.apiEndpoint');
+const shellyOauthEndpoint = config.get('shelly.oauthEndpoint');
 
 /**
- * LIFX API calls used by this application
+ * Shelly API calls used by this application
  */
 module.exports = {
 
     /**
-     * Handles OAuth2 callback from LIFX, making request to exchange the code for access and refresh tokens
+     * Handles OAuth2 callback from Shelly, making request to exchange the code for access and refresh tokens
      *
      * @param installedAppId
      * @param queryString
      * @returns {*}
      */
-    handleOauthCallback: function(installedAppId, queryString) {
-        let params = qs.parse(queryString);
-        let req = {
-            client_id: lifxClientId,
-            client_secret: lifxClientSecret,
-            grant_type: "authorization_code",
-            code: params.code,
-            scope: params.scope
-        };
-        let body = JSON.stringify(req);
-        let options = {
-            method: 'POST',
-            uri: `${lifxOauthEndpoint}/token`,
-            headers: {
-                "Content-Type": "application/json",
-                "User-Agent": "SmartThings Integration"
-            },
-            body: body,
-            transform: function(body) {
-                log.debug("body=" + body);
-                return JSON.parse(body)
-            }
-        };
-        return rp(options);
-    },
-
-    /**
-     * Returns a list of LIFX location id and name pairs
-     *
-     * @param token LIFX access token
-     * @param callback Function called with the location list
-     * @returns [{"id":"locationid", "name":"location name}...]
-     */
-    getLocations: function(token, callback) {
-        let options = {
-            method: 'GET',
-            uri: `${lifxApiEndpoint}/lights/`,
-            headers: {
-                "User-Agent": "SmartThings Integration",
-                "Authorization": `Bearer ${token}`
-            },
-            transform: function (body) {
-                return JSON.parse(body)
-            }
-        };
-        rp(options).then(function(data) {
-            let locations = [];
-            data.forEach(function(item) {
-                locations.push({id: item.location.id, name: item.location.name});
-            });
-            callback(locations);
-        }).error(function(err) {
-            log.error(`$err encountered retrieving locations`)
-        });
-    },
+    // handleOauthCallback: function (installedAppId, queryString) {
+    //     let params = qs.parse(queryString);
+    //     let req = {
+    //         client_id: shellyClientId,
+    //         client_secret: shellyClientSecret,
+    //         grant_type: "authorization_code",
+    //         code: params.code,
+    //         scope: params.scope
+    //     };
+    //     let body = JSON.stringify(req);
+    //     let options = {
+    //         method: 'POST',
+    //         uri: `${shellyOauthEndpoint}/token`,
+    //         headers: {
+    //             "Content-Type": "application/json",
+    //             "User-Agent": "SmartThings Integration"
+    //         },
+    //         body: body,
+    //         transform: function (body) {
+    //             log.debug("body=" + body);
+    //             return JSON.parse(body)
+    //         }
+    //     };
+    //     return rp(options);
+    // },
 
     /**
      * Returns a list of lights in a location
      *
-     * @param token LIFX access token
-     * @param lifxLocationId LIFX location ID
+     * @param token Shelly access token
      * @param callback Function called with list of lights
-     * @see https://api.developer.lifx.com/docs/list-lights
      */
-    getLights: function(token, lifxLocationId, callback) {
+    getShellys: function(token, callback) {
         let options = {
             method: 'GET',
-            uri: `${lifxApiEndpoint}/lights/location_id:${lifxLocationId}`,
+            uri: `${shellyApiEndpoint}/lights`,
             headers: {
                 "User-Agent": "SmartThings Integration",
                 "Authorization": `Bearer ${token}`
@@ -108,12 +76,11 @@ module.exports = {
      * @param token
      * @param externalId
      * @param callback
-     * @see https://api.developer.lifx.com/docs/list-lights
      */
     getLight: function(token, externalId, callback) {
         let options = {
             method: 'GET',
-            uri: `${lifxApiEndpoint}/lights/id:${externalId}`,
+            uri: `${shellyApiEndpoint}/lights/id:${externalId}`,
             headers: {
                 "User-Agent": "SmartThings Integration",
                 "Authorization": `Bearer ${token}`
@@ -134,12 +101,11 @@ module.exports = {
      * @param externalId
      * @param body
      * @param callback
-     * @see https://api.developer.lifx.com/docs/set-state
      */
     sendCommand: function(token, externalId, body, callback) {
         let options = {
             method: 'PUT',
-            uri: `${lifxApiEndpoint}/lights/id:${externalId}/state`,
+            uri: `${shellyApiEndpoint}/lights/id:${externalId}/state`,
             headers: {
                 "User-Agent": "SmartThings Integration",
                 "Authorization": `Bearer ${token}`
@@ -162,7 +128,7 @@ module.exports = {
 
     /**
      * Given a light state object, returns a list of the events to initialize the state on the SmartThings platform.
-     * @param light Object returned from getLight or and item from getLights
+     * @param light Object returned from getLight or and item from getShellys
      * @returns List of event objects
      */
     allLightEvents(light) {
@@ -191,7 +157,7 @@ function fullEventList(light) {
             capability: "switch",
             attribute: "switch",
             value: light.power
-        },
+        }/*,
         {
             component: "main",
             capability: "switchLevel",
@@ -215,7 +181,7 @@ function fullEventList(light) {
             capability: "colorControl",
             attribute: "saturation",
             value: light.color.saturation * 100
-        }/*,
+        },
         {
             component: "main",
             capability: "color",

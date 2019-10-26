@@ -34,14 +34,14 @@ exports.handle = (evt, context, callback) => {
             break;
         }
 
-        case 'OAUTH_CALLBACK': {
-            log.info(`${evt.lifecycle}\nREQUEST: ${JSON.stringify(evt, null, 2)}`);
-            log.debug(JSON.stringify(evt));
-            oauthLifecycle.handleOauthCallback(evt.oauthCallbackData);
-            log.info(`RESPONSE: ${JSON.stringify(evt, null, 2)}`);
-            log.response(callback, {statusCode: 200, oAuthCallbackData: {}});
-            break;
-        }
+        // case 'OAUTH_CALLBACK': {
+        //     log.info(`${evt.lifecycle}\nREQUEST: ${JSON.stringify(evt, null, 2)}`);
+        //     log.debug(JSON.stringify(evt));
+        //     oauthLifecycle.handleOauthCallback(evt.oauthCallbackData);
+        //     log.info(`RESPONSE: ${JSON.stringify(evt, null, 2)}`);
+        //     log.response(callback, { statusCode: 200, oAuthCallbackData: {} });
+        //     break;
+        // }
 
         case 'INSTALL': {
             log.info(`${evt.lifecycle}\nREQUEST: ${JSON.stringify(evt, null, 2)}`);
