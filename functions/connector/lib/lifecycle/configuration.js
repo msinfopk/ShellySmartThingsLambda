@@ -1,7 +1,7 @@
 'use strict';
 
 const log = require('../local/log');
-const db = require('../local/db');
+// const db = require('../local/db');
 const shelly = require('../api/shelly');
 const util = require('../api/util');
 
@@ -35,30 +35,30 @@ module.exports = {
     /**
      * Return the configuration page for the app - the link to log into Shelly
      */
-    page: function(configurationData, callback) {
-        // db.get(configurationData.installedAppId, function(state) {
-        //     if (shellyClientId) {
-        //         if (state && state.shellyAccessToken) {
-        //             // Authenticated, display page to select location
-        //             locationsPage(configurationData, callback)
-        //         }
-        //         else {
-        //             // Not authenticate but with a clientId, display page to connect to Shelly
-        //             authPage(configurationData, callback);
-        //         }
-        //     }
-        //     else {
-        //         if (configurationData.pageId == "locationsPage") {
-        //             // Display page to select location with test API key
-        //             locationsPage(configurationData, callback)
-        //         }
-        //         else {
-        //             // No client ID. Prompt for direct entry of access token
-        //             tokenPage(configurationData, callback);
-        //         }
-        //     }
-        // });
-    }
+    // page: function(configurationData, callback) {
+    //     db.get(configurationData.installedAppId, function(state) {
+    //         if (shellyClientId) {
+    //             if (state && state.shellyAccessToken) {
+    //                 // Authenticated, display page to select location
+    //                 locationsPage(configurationData, callback)
+    //             }
+    //             else {
+    //                 // Not authenticate but with a clientId, display page to connect to Shelly
+    //                 authPage(configurationData, callback);
+    //             }
+    //         }
+    //         else {
+    //             if (configurationData.pageId == "locationsPage") {
+    //                 // Display page to select location with test API key
+    //                 locationsPage(configurationData, callback)
+    //             }
+    //             else {
+    //                 // No client ID. Prompt for direct entry of access token
+    //                 tokenPage(configurationData, callback);
+    //             }
+    //         }
+    //     });
+    // }
 };
 
 // /**
@@ -116,16 +116,13 @@ module.exports = {
 //                         {
 //                             type: "PARAGRAPH",
 //                             id: "text",
-//                             name: "This app is in test mode. To use it you should enter your test access token from the Shelly developer site. " +
-//                             "Test mode provides all features of the app other than OAuth into Shelly. " +
-//                             "To test that feature you will need to obtain a client ID and secret from Shelly. You can do that from the " +
-//                             "link below.",
+//                             name: "This app is in test mode. To use it you should enter your test access token from the Shelly developer site. "
 //                         },
 //                         {
 //                             type: "TEXT",
 //                             id: "shellyAccessToken",
 //                             name: "Enter your Shelly API token",
-//                             description: "From https://cloud.lifx.com/",
+//                             description: "From the Shelly App or https://my.shelly.cloud/",
 //                             required: true
 //                         }
 //                     ]
@@ -137,7 +134,7 @@ module.exports = {
 //                             id: "href",
 //                             name: "Get a Shelly Personal Access Token >>",
 //                             required: false,
-//                             url: "https://cloud.lifx.com/settings"
+//                             url: "https://my.shelly.cloud/"
 //                         }
 //                     ]
 //                 }

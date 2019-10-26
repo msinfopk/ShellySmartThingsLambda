@@ -5,15 +5,15 @@
     "clientSecret": "REPLACE WITH YOUR CLIENT SECRET FROM DEV WORKSPACE"
   },
   "deviceProfiles": {
-    "color": "REPLACE WITH YOUR DEVICE PROFILE ID FROM DEV WORKSPACE",
-    "colorTemp": "REPLACE WITH YOUR DEVICE PROFILE ID FROM DEV WORKSPACE",
-    "white": "REPLACE WITH YOUR DEVICE PROFILE ID FROM DEV WORKSPACE"
+    "Shelly1OS": "REPLACE WITH YOUR DEVICE PROFILE ID FROM DEV WORKSPACE",
+    "Shelly25": "REPLACE WITH YOUR DEVICE PROFILE ID FROM DEV WORKSPACE"
   },
   "shelly": {
     "apiEndpoint": "https://shelly-4-eu.shelly.cloud",
     "oauthEndpoint": "",
     "clientId": "",
-    "clientSecret": ""
+    "clientSecret": "",
+    "personalAccessToken": ""
   },
   "smartThings": {
     "apiEndpoint": "https://api.smartthings.com"

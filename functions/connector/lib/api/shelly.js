@@ -4,10 +4,11 @@ const qs = require('querystring');
 const rp = require('request-promise');
 const log = require('../local/log');
 const config = require('config');
-const shellyApiEndpoint = config.get('shelly.apiEndpoint');
-const shellyClientSecret = config.get('shelly.clientSecret');
-const shellyApiEndpoint = config.get('shelly.apiEndpoint');
-const shellyOauthEndpoint = config.get('shelly.oauthEndpoint');
+
+// const shellyClientId = config.get('shelly.clientId');
+// const shellyClientSecret = config.get('shelly.clientSecret');
+// const shellyApiEndpoint = config.get('shelly.apiEndpoint');
+// const shellyOauthEndpoint = config.get('shelly.oauthEndpoint');
 
 /**
  * Shelly API calls used by this application
@@ -51,15 +52,18 @@ module.exports = {
      * Returns a list of shelly devices
      *
      * @param token Shelly access token
-     * @param callback Function called with list of lights
+     * @param callback Function called with list of Shelly devices
      */
-    getShellys: function(token, callback) {
+    getAllShellyDevices: function(token, callback) {
         let options = {
-            method: 'GET',
-            uri: `${shellyApiEndpoint}/lights`,
+            method: 'POST',
+            uri: `${shellyApiEndpoint}/device/all_status`,
             headers: {
                 "User-Agent": "SmartThings Integration",
-                "Authorization": `Bearer ${token}`
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            form: {
+                auth_key: `${token}`
             },
             transform: function (body) {
                 return JSON.parse(body)
@@ -71,19 +75,23 @@ module.exports = {
     },
 
     /**
-     * Returns a description of a particular light
+     * Returns a description of a particular device
      *
      * @param token
      * @param externalId
      * @param callback
      */
-    getLight: function(token, externalId, callback) {
+    getSingleShellyDevice: function(token, externalId, callback) {
         let options = {
-            method: 'GET',
-            uri: `${shellyApiEndpoint}/lights/id:${externalId}`,
+            method: 'POST',
+            uri: `${shellyApiEndpoint}/device/status/`,
             headers: {
                 "User-Agent": "SmartThings Integration",
-                "Authorization": `Bearer ${token}`
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            form: {
+                auth_key: `${token}`,
+                id: `${externalId}`
             },
             transform: function (body) {
                 return JSON.parse(body)
@@ -95,24 +103,27 @@ module.exports = {
     },
 
     /**
-     * Set the state of a specific light
+     * Set the state of a specific relay
      *
      * @param token
      * @param externalId
-     * @param body
+     * @param channel
+     * @param action
      * @param callback
      */
-    sendCommand: function(token, externalId, body, callback) {
+    sendRelayCommand: function (token, externalId, relayChannel, relayAction, callback) {
         let options = {
-            method: 'PUT',
-            uri: `${shellyApiEndpoint}/lights/id:${externalId}/state`,
+            method: 'POST',
+            uri: `${shellyApiEndpoint}/device/relay/control`,
             headers: {
                 "User-Agent": "SmartThings Integration",
-                "Authorization": `Bearer ${token}`
+                "Content-Type": "application/x-www-form-urlencoded"
             },
-            body: JSON.stringify(body),
-            transform: function(body) {
-                return JSON.parse(body)
+            form: {
+                auth_key: `${token}`,
+                id: `${externalId}`,
+                channel: `${relayChannel}`,
+                turn: `${relayAction}`
             }
         };
         log.debug(`authorization=${options.headers.Authorization}`);
@@ -127,16 +138,16 @@ module.exports = {
     },
 
     /**
-     * Given a light state object, returns a list of the events to initialize the state on the SmartThings platform.
-     * @param light Object returned from getLight or and item from getShellys
+     * Given a device state object, returns a list of the events to initialize the state on the SmartThings platform.
+     * @param device Object returned from getSingleShellyDevice or and item from getAllShellyDevices
      * @returns List of event objects
      */
-    allLightEvents(light) {
-        return fullEventList(light);
+    allDeviceEvents(shellyDevice) {
+        return fullEventList(shellyDevice);
     },
 
-    initialLightEvents(light) {
-        let events = fullEventList(light);
+    initialDeviceEvents(shellyDevice) {
+        let events = fullEventList(shellyDevice);
         /*
         events.push({
             component: "main",
@@ -149,44 +160,43 @@ module.exports = {
     }
 };
 
-function fullEventList(light) {
-    const healthStatus = light.connected ? "online" : "offline";
+function fullEventList(shellyDevice) {
     return [
         {
             component: "main",
             capability: "switch",
             attribute: "switch",
-            value: light.power
+            value: shellyDevice.data.relays.[channel].ison
         }/*,
         {
             component: "main",
             capability: "switchLevel",
             attribute: "level",
-            value: light.brightness * 100
+            value: shellyDevice.brightness * 100
         },
         {
             component: "main",
             capability: "colorTemperature",
             attribute: "colorTemperature",
-            value: light.color.kelvin
+            value: shellyDevice.color.kelvin
         },
         {
             component: "main",
             capability: "colorControl",
             attribute: "hue",
-            value: light.color.hue / 3.6
+            value: shellyDevice.color.hue / 3.6
         },
         {
             component: "main",
             capability: "colorControl",
             attribute: "saturation",
-            value: light.color.saturation * 100
+            value: shellyDevice.color.saturation * 100
         },
         {
             component: "main",
             capability: "color",
             attribute: "colorValue",
-            value: {hue: light.color.hue, saturation: light.color.saturation * 100}
+            value: {hue: shellyDevice.color.hue, saturation: shellyDevice.color.saturation * 100}
         },
         {
             component: "main",
@@ -199,13 +209,13 @@ function fullEventList(light) {
             component: "main",
             capability: "healthCheck",
             attribute: "DeviceWatch-DeviceStatus",
-            value: healthStatus
+            value: shellyDevice.data.online
         },
         {
             component: "main",
             capability: "healthCheck",
             attribute: "healthStatus",
-            value: healthStatus
+            value: shellyDevice.isok
         }
     ];
 }

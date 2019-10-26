@@ -2,7 +2,7 @@
 
 const log = require('./lib/local/log');
 const configurationLifecycle = require('./lib/lifecycle/configuration');
-const oauthLifecycle = require('./lib/lifecycle/oauth');
+// const oauthLifecycle = require('./lib/lifecycle/oauth');
 const crudLifecycle = require('./lib/lifecycle/crud');
 const eventLifecycle = require('./lib/lifecycle/event');
 

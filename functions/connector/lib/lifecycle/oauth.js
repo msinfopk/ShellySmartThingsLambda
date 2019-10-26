@@ -1,8 +1,8 @@
 'use strict';
 
-const db = require('../local/db');
+// const db = require('../local/db');
 const log = require('../local/log');
-const lifx = require('../api/lifx');
+const shelly = require('../api/shelly');
 const config = require('config');
 
 module.exports = {

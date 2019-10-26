@@ -5,6 +5,8 @@ const shelly = require('../api/shelly');
 const st = require('../api/st');
 const util = require('../api/util');
 
+const shellyAccessToken = config.get('shelly.oauthEndpoint');
+
 /**
  * INSTALL, UPDATE, and UNINSTALL lifecycle events
  */
@@ -54,14 +56,10 @@ function updateDevices(params, existingDevices) {
     let config = params.installedApp.config;
 
     if (config) {
-        // Get the stored Shelly access token (from OAuth journey)
-        db.get(installedAppId, function (state) {
-
-            // Query Shelly for list of lights in the selected location
-            let shellyAccessToken = util.shellyAccessToken(state, config);
-            shelly.getShellys(shellyAccessToken, function (lights) {
-                util.reconcileDeviceLists(params.authToken, locationId, installedAppId, lights, existingDevices);
-            });
+        // Query Shelly for list of devices
+        // let shellyAccessToken = util.shellyAccessToken(state, config);
+        shelly.getAllShellyDevices(shellyAccessToken, function (shellyDevices) {
+            util.reconcileDeviceLists(params.authToken, locationId, installedAppId, shellyDevices, existingDevices);
         });
     }
 }
