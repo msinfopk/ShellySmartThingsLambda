@@ -11,6 +11,7 @@
   "dependencies": {
     "aws-sdk": "^2.549.0",
     "bluebird": "^3.7.1",
+    "bottleneck": "^2.19.5",
     "config": "^1.26.2",
     "request": "^2.81.0",
     "request-promise": "^4.2.1"

@@ -3,11 +3,11 @@
 const qs = require('querystring');
 const rp = require('request-promise');
 const log = require('../local/log');
-const config = require('config');
 
+const config = require('config');
 // const shellyClientId = config.get('shelly.clientId');
 // const shellyClientSecret = config.get('shelly.clientSecret');
-// const shellyApiEndpoint = config.get('shelly.apiEndpoint');
+const shellyApiEndpoint = config.get('shelly.apiEndpoint');
 // const shellyOauthEndpoint = config.get('shelly.oauthEndpoint');
 // const shellyAccessToken = config.get('shelly.personalAccessToken');
 
@@ -67,8 +67,10 @@ module.exports = {
                 auth_key: `${token}`
             },
             transform: function (body) {
-                let fullBody = JSON.parse(body)
-                return fullBody.devices
+                let fullBody = JSON.parse(body);
+                log.info(body);
+                log.info(fullBody.device);
+                return fullBody.devices;
             }
         };
         rp(options)
@@ -96,8 +98,10 @@ module.exports = {
                 auth_key: `${token}`
             },
             transform: function (body) {
-                let fullBody = JSON.parse(body)
-                return fullBody.data.devices_status
+                let fullBody = JSON.parse(body);
+                log.info(body);
+                log.info(fullBody.data.devices_status);
+                return fullBody.data.devices_status;
             }
         };
         rp(options)
@@ -127,15 +131,16 @@ module.exports = {
                 id: `${externalId}`
             },
             transform: function (body) {
-                let fullBody = JSON.parse(body)
-                return fullBody.data.devices_status
+                let fullBody = JSON.parse(body);
+                log.info(body);
+                log.info(fullBody.data.devices_status);
+                return fullBody.data.devices_status;
             }
         };
         rp(options)
             .then(function (data) {
                 callback(data);
-            })
-            .delay(1000);  // make sure we do not exceed the 1 request / second limit
+            });
     },
 
     /**
@@ -178,7 +183,6 @@ module.exports = {
                     callback(data);
                 }
             })
-            .delay(1000)  // make sure we do not exceed the 1 request / second limit
             .catch(function (err) {
                 log.error(`${err} sending commands to ${externalId}`)
             });
