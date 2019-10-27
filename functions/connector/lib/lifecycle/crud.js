@@ -5,7 +5,7 @@ const shelly = require('../api/shelly');
 const st = require('../api/st');
 const util = require('../api/util');
 
-const shellyAccessToken = config.get('shelly.oauthEndpoint');
+const shellyAccessToken = config.get('shelly.personalAccessToken');
 
 /**
  * INSTALL, UPDATE, and UNINSTALL lifecycle events
@@ -16,7 +16,7 @@ module.exports = {
      * Called when the app is first installed after the configuration and permissions page. Creates devices and
      * schedules periodic 5 minute polling of device states.
      */
-    install: function(installData) {
+    install: function (installData) {
         updateDevices(installData, []);
         st.createSchedule(installData.authToken, installData.installedApp.installedAppId, 'poll', '1/5 * * * ? *');
     },
@@ -26,11 +26,11 @@ module.exports = {
      * If there is more than one location and the selected location is changed, then existing devices are
      * removed and new devices created.
      */
-    update: function(updateData) {
+    update: function (updateData) {
         let token = updateData.authToken;
         let locationId = updateData.installedApp.locationId;
         let installedAppId = updateData.installedApp.installedAppId;
-        st.listDevices(token, locationId, installedAppId).then(function(list) {
+        st.listDevices(token, locationId, installedAppId).then(function (list) {
             updateDevices(updateData, list);
         });
     },
@@ -39,7 +39,7 @@ module.exports = {
      * Called when the connector is uninstalled. Nothing to do here since the system automatically deletes
      * the devices.
      */
-    uninstall: function(uninstallData) {
+    uninstall: function (uninstallData) {
         log.debug(`${uninstallData.installedApp.installedAppId} connector deleted`);
     }
 };
@@ -58,7 +58,7 @@ function updateDevices(params, existingDevices) {
     if (config) {
         // Query Shelly for list of devices
         // let shellyAccessToken = util.shellyAccessToken(state, config);
-        shelly.getAllShellyDevices(shellyAccessToken, function (shellyDevices) {
+        shelly.listAllShellyDevices(shellyAccessToken, function (shellyDevices) {
             util.reconcileDeviceLists(params.authToken, locationId, installedAppId, shellyDevices, existingDevices);
         });
     }

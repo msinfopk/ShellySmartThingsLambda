@@ -5,7 +5,7 @@ const shelly = require('../api/shelly');
 const st = require('../api/st');
 const util = require('../api/util');
 
-const shellyAccessToken = config.get('shelly.oauthEndpoint');
+const shellyAccessToken = config.get('shelly.personalAccessToken');
 
 module.exports = {
 
@@ -15,14 +15,14 @@ module.exports = {
      * @param eventData
      * @param commandsEvent
      */
-    handleDeviceCommand: function(eventData, commandsEvent) {
+    handleDeviceCommand: function (eventData, commandsEvent) {
         let deviceCommandsEvent = commandsEvent.deviceCommandsEvent;
         let token = eventData.authToken;
         // let shellyAccessToken = util.shellyAccessToken(state, eventData.installedApp.config);
-        deviceCommandsEvent.commands.forEach(function(cmd) {
+        deviceCommandsEvent.commands.forEach(function (cmd) {
             switch (cmd.command) {
                 case "on": {
-                    shelly.sendRelayCommand(shellyAccessToken, deviceCommandsEvent.externalId, {turn: "on"}, function (data, resp) {
+                    shelly.sendRelayCommand(shellyAccessToken, deviceCommandsEvent.externalId, "on", function (data, resp) {
                         let body = [
                             {
                                 component: "main",
@@ -36,7 +36,7 @@ module.exports = {
                     break;
                 }
                 case "off": {
-                    shelly.sendRelayCommand(shellyAccessToken, deviceCommandsEvent.externalId, { turn: "off"}, function (data, resp) {
+                    shelly.sendRelayCommand(shellyAccessToken, deviceCommandsEvent.externalId, "off", function (data, resp) {
                         let body = [
                             {
                                 component: "main",
@@ -195,19 +195,27 @@ module.exports = {
      * @param eventData
      * @param scheduleEvent
      */
-    handleScheduledEvent: function(eventData, scheduleEvent) {
+    handleScheduledEvent: function (eventData, scheduleEvent) {
         let token = eventData.authToken;
-        st.listDevices(token, eventData.installedApp.locationId, eventData.installedApp.installedAppId).then(function(devices) {
+        st.listDevices(token, eventData.installedApp.locationId, eventData.installedApp.installedAppId).then(function (smartThingsDevices) {
             // let shellyAccessToken = util.shellyAccessToken(state, eventData.installedApp.config);
-            shelly.getAllShellyDevices(shellyAccessToken, function(sDevices) {
-                shellyDevices.forEach(function (shellyDevice) {
-                    let smartThingsDevice = devices.find(function (d) { return d.app.externalId == shellyDevice.id; });
-                    if (smartThingsDevice) {
-                        log.debug(`Sending events for ${shellyDevice.id}`);
-                        st.sendEvents(eventData.authToken, device.deviceId, shelly.allDeviceEvents(shellyDevice))
-                    }
+            shelly.getAllShellyDeviceStatuses(shellyAccessToken, function (shellyDeviceStatuses) {
+                shellyDeviceStatuses.forEach(function (shellyDeviceStatus) {
+                    shellyDevice.relays.forEach(function (thisRelay, thisRelayChannel) {
+                        let smartThingsID = shellyDevice.id;
+                        if (thisRelayChannel > 0) {
+                            let smartThingsID = shellyDevice.id + "_" + thisRelayChannel;
+                        }
+                        let smartThingsDevice = smartThingsDevices.find(function (d) { return d.app.externalId == smartThingsID; });
+                        if (smartThingsDevice) {
+                            log.debug(`Sending events for ${shellyDevice.id}`);
+                            st.sendEvents(eventData.authToken, device.deviceId, shelly.allDeviceEvents(shellyDeviceStatus, thisRelayChannel))
+                        }
+                    });
                 });
-                util.reconcileDeviceLists(token, eventData.installedApp.locationId, eventData.installedApp.installedAppId, shellyDevices, devices);
+            });
+            shelly.listAllShellyDevices(shellyAccessToken, function (shellyDevices) {
+                util.reconcileDeviceLists(token, eventData.installedApp.locationId, eventData.installedApp.installedAppId, shellyDevices, smartThingsDevices);
             });
         });
     }

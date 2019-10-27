@@ -70,4 +70,4 @@ typings/
 .next
 
 Customized config file
-default.json
+functions/connector/config/default.json

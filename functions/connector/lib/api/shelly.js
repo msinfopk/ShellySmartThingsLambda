@@ -9,6 +9,7 @@ const config = require('config');
 // const shellyClientSecret = config.get('shelly.clientSecret');
 // const shellyApiEndpoint = config.get('shelly.apiEndpoint');
 // const shellyOauthEndpoint = config.get('shelly.oauthEndpoint');
+// const shellyAccessToken = config.get('shelly.personalAccessToken');
 
 /**
  * Shelly API calls used by this application
@@ -54,24 +55,56 @@ module.exports = {
      * @param token Shelly access token
      * @param callback Function called with list of Shelly devices
      */
-    getAllShellyDevices: function(token, callback) {
+    listAllShellyDevices: function (token, callback) {
         let options = {
             method: 'POST',
-            uri: `${shellyApiEndpoint}/device/all_status`,
+            uri: `${shellyApiEndpoint}/interface/device/list/`,
             headers: {
-                "User-Agent": "SmartThings Integration",
-                "Content-Type": "application/x-www-form-urlencoded"
+                // "Content-Type": "application/x-www-form-urlencoded",  // set automatically
+                "User-Agent": "SmartThings Integration"
             },
             form: {
                 auth_key: `${token}`
             },
             transform: function (body) {
-                return JSON.parse(body)
+                let fullBody = JSON.parse(body)
+                return fullBody.devices
             }
         };
-        rp(options).then(function(data) {
-            callback(data);
-        });
+        rp(options)
+            .then(function (data) {
+                callback(data);
+            })
+            .delay(1000);  // make sure we do not exceed the 1 request / second limit
+    },
+
+    /**
+     * Returns the status of all Shelly devices
+     *
+     * @param token Shelly access token
+     * @param callback Function called with list of Shelly devices
+     */
+    getAllShellyDeviceStatuses: function (token, callback) {
+        let options = {
+            method: 'POST',
+            uri: `${shellyApiEndpoint}/device/all_status`,
+            headers: {
+                // "Content-Type": "application/x-www-form-urlencoded",  // set automatically
+                "User-Agent": "SmartThings Integration"
+            },
+            form: {
+                auth_key: `${token}`
+            },
+            transform: function (body) {
+                let fullBody = JSON.parse(body)
+                return fullBody.data.devices_status
+            }
+        };
+        rp(options)
+            .then(function (data) {
+                callback(data);
+            })
+            .delay(1000);  // make sure we do not exceed the 1 request / second limit
     },
 
     /**
@@ -81,25 +114,28 @@ module.exports = {
      * @param externalId
      * @param callback
      */
-    getSingleShellyDevice: function(token, externalId, callback) {
+    getSingleShellyDeviceStatus: function (token, externalId, callback) {
         let options = {
             method: 'POST',
             uri: `${shellyApiEndpoint}/device/status/`,
             headers: {
-                "User-Agent": "SmartThings Integration",
-                "Content-Type": "application/x-www-form-urlencoded"
+                // "Content-Type": "application/x-www-form-urlencoded",  // set automatically
+                "User-Agent": "SmartThings Integration"
             },
             form: {
                 auth_key: `${token}`,
                 id: `${externalId}`
             },
             transform: function (body) {
-                return JSON.parse(body)
+                let fullBody = JSON.parse(body)
+                return fullBody.data.devices_status
             }
         };
-        rp(options).then(function(data) {
-            callback(data);
-        });
+        rp(options)
+            .then(function (data) {
+                callback(data);
+            })
+            .delay(1000);  // make sure we do not exceed the 1 request / second limit
     },
 
     /**
@@ -111,13 +147,21 @@ module.exports = {
      * @param action
      * @param callback
      */
-    sendRelayCommand: function (token, externalId, relayChannel, relayAction, callback) {
+    sendRelayCommand: function (token, externalId, relayAction, callback) {
+        let isCombinedRelay = externalId.indexOf("_") >= 0
+        if (isCombinedRelay) {
+            let shellyID = externalId.split()[0];
+            let relayChannel = externalId.split()[1];
+        } else {
+            let shellyID = externalId;
+            let relayChannel = 0;
+        }
         let options = {
             method: 'POST',
             uri: `${shellyApiEndpoint}/device/relay/control`,
             headers: {
-                "User-Agent": "SmartThings Integration",
-                "Content-Type": "application/x-www-form-urlencoded"
+                // "Content-Type": "application/x-www-form-urlencoded",  // set automatically
+                "User-Agent": "SmartThings Integration"
             },
             form: {
                 auth_key: `${token}`,
@@ -128,26 +172,29 @@ module.exports = {
         };
         log.debug(`authorization=${options.headers.Authorization}`);
         log.debug(`uri=${options.uri}`);
-        rp(options).then(function(data) {
-            if (data && callback) {
-                callback(data);
-            }
-        }).catch(function(err){
-            log.error(`${err} sending commands to ${externalId}`)
-        });
+        rp(options)
+            .then(function (data) {
+                if (data && callback) {
+                    callback(data);
+                }
+            })
+            .delay(1000)  // make sure we do not exceed the 1 request / second limit
+            .catch(function (err) {
+                log.error(`${err} sending commands to ${externalId}`)
+            });
     },
 
     /**
      * Given a device state object, returns a list of the events to initialize the state on the SmartThings platform.
-     * @param device Object returned from getSingleShellyDevice or and item from getAllShellyDevices
+     * @param device Object returned from getSingleShellyDeviceStatus or and item from getAllShellyDeviceStatuses
      * @returns List of event objects
      */
-    allDeviceEvents(shellyDevice) {
-        return fullEventList(shellyDevice);
+    allDeviceEvents(shellyDeviceStatus, shellyChannel) {
+        return fullEventList(shellyDeviceStatus, shellyChannel);
     },
 
-    initialDeviceEvents(shellyDevice) {
-        let events = fullEventList(shellyDevice);
+    initialDeviceEvents(shellyDeviceStatus, shellyChannel) {
+        let events = fullEventList(shellyDeviceStatus, shellyChannel);
         /*
         events.push({
             component: "main",
@@ -160,13 +207,15 @@ module.exports = {
     }
 };
 
-function fullEventList(shellyDevice) {
+function fullEventList(shellyDeviceStatus, shellyChannel) {
+    const healthStatus = shellyDeviceStatus.cloud.connected ? "online" : "offline";
+    const relayStatus = shellyDeviceStatus.relays[shellyChannel].ison ? "on" : "off";
     return [
         {
             component: "main",
             capability: "switch",
             attribute: "switch",
-            value: shellyDevice.data.relays.[channel].ison
+            value: relayStatus
         }/*,
         {
             component: "main",
@@ -207,15 +256,33 @@ function fullEventList(shellyDevice) {
         ,
         {
             component: "main",
+            capability: "temperatureMeasurement",
+            attribute: "powerMeter",
+            value: shellyDeviceStatus.tmp.tC
+        },
+        {
+            component: "main",
+            capability: "temperatureMeasurement",
+            attribute: "unit",
+            value: "C"
+        },
+        {
+            component: "main",
+            capability: "powerMeter",
+            attribute: "value",
+            value: shellyDeviceStatus.meters[shellyChannel].power
+        },
+        {
+            component: "main",
             capability: "healthCheck",
             attribute: "DeviceWatch-DeviceStatus",
-            value: shellyDevice.data.online
+            value: healthStatus
         },
         {
             component: "main",
             capability: "healthCheck",
             attribute: "healthStatus",
-            value: shellyDevice.isok
+            value: healthStatus
         }
     ];
 }

@@ -18,46 +18,33 @@ module.exports = {
     /**
      * Return scopes and other data about this app
      */
-    initialize: function(configurationData, callback)
-    {
+    initialize: function (configurationData, callback) {
         let config = {
             initialize: {
                 id: appName,
                 name: 'Shelly Cloud Connector',
                 description: 'Creates Shelly Cloud devices in SmartThings',
-                permissions: ['l:devices', 'i:deviceprofiles', 'w:schedules'],
+                permissions: ['l:devices', 'i:deviceprofiles'],
                 firstPage: 'mainPage'
             }
         };
-        log.response(callback, {statusCode: 200, configurationData: config});
+        log.response(callback, { statusCode: 200, configurationData: config });
     },
 
-    /**
-     * Return the configuration page for the app - the link to log into Shelly
-     */
+    // /**
+    //  * Return the configuration page for the app - the link to log into Shelly
+    //  */
     // page: function(configurationData, callback) {
-    //     db.get(configurationData.installedAppId, function(state) {
-    //         if (shellyClientId) {
-    //             if (state && state.shellyAccessToken) {
-    //                 // Authenticated, display page to select location
-    //                 locationsPage(configurationData, callback)
-    //             }
-    //             else {
-    //                 // Not authenticate but with a clientId, display page to connect to Shelly
-    //                 authPage(configurationData, callback);
-    //             }
+    //     if (shellyClientId) {
+    //         if (state && state.shellyAccessToken) {
+    //             // Authenticated, display page to select location
+    //             locationsPage(configurationData, callback)
     //         }
-    //         else {
-    //             if (configurationData.pageId == "locationsPage") {
-    //                 // Display page to select location with test API key
-    //                 locationsPage(configurationData, callback)
-    //             }
-    //             else {
-    //                 // No client ID. Prompt for direct entry of access token
-    //                 tokenPage(configurationData, callback);
-    //             }
-    //         }
-    //     });
+    //     }
+    //     else {
+    //         // No client ID. Prompt for direct entry of access token
+    //         tokenPage(configurationData, callback);
+    //     }
     // }
 };
 
@@ -100,7 +87,6 @@ module.exports = {
 //  */
 // function tokenPage(configurationData, callback) {
 //     let connectorAppId = configurationData.installedAppId;
-//     let url = `${shellyOauthEndpoint}/authorize?client_id=${shellyClientId}&state=${connectorAppId}&scope=remote_control:all&response_type=code`;
 //     log.debug("AUTH URL="+ url);
 //     let config = {
 //         page: {
