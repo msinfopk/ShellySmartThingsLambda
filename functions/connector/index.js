@@ -26,7 +26,7 @@ exports.handle = (evt, context, callback) => {
                     break;
                 case 'PAGE':
                     log.info(`${evt.lifecycle}/${configurationData.phase}/${configurationData.pageId}\nREQUEST: ${JSON.stringify(evt, null, 2)}`);
-                    log.response(callback, { statusCode: 200, configurationData: config });
+                    configurationLifecycle.page(configurationData, callback);
                     break;
                 default:
                     throw new Error(`Unsupported config phase: ${configurationData.phase}`);

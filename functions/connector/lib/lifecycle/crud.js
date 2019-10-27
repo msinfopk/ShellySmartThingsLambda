@@ -5,6 +5,7 @@ const shelly = require('../api/shelly');
 const st = require('../api/st');
 const util = require('../api/util');
 
+const config = require('config');
 const shellyAccessToken = config.get('shelly.personalAccessToken');
 
 /**

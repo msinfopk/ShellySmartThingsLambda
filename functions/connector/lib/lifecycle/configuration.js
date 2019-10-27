@@ -21,32 +21,62 @@ module.exports = {
     initialize: function (configurationData, callback) {
         let config = {
             initialize: {
-                id: appName,
                 name: 'Shelly Cloud Connector',
                 description: 'Creates Shelly Cloud devices in SmartThings',
-                permissions: ['l:devices', 'i:deviceprofiles'],
-                firstPage: 'mainPage'
+                id: "app",
+                permissions: ['i:deviceprofiles', 'r:devices:*', 'w:devices:*', 'x:devices:*', 'r:locations:*'],
+                firstPageId: 'mainPage'
             }
         };
         log.response(callback, { statusCode: 200, configurationData: config });
     },
 
-    // /**
-    //  * Return the configuration page for the app - the link to log into Shelly
-    //  */
-    // page: function(configurationData, callback) {
-    //     if (shellyClientId) {
-    //         if (state && state.shellyAccessToken) {
-    //             // Authenticated, display page to select location
-    //             locationsPage(configurationData, callback)
-    //         }
-    //     }
-    //     else {
-    //         // No client ID. Prompt for direct entry of access token
-    //         tokenPage(configurationData, callback);
-    //     }
-    // }
+    /**
+     * Return the configuration page for the app - the link to log into Shelly
+     */
+    page: function(configurationData, callback) {
+        noConfigNeeded(configurationData, callback);
+        // if (shellyClientId) {
+        //     if (state && state.shellyAccessToken) {
+        //         // Authenticated, display page to select location
+        //         locationsPage(configurationData, callback)
+        //     }
+        // }
+        // else {
+        //     // No client ID. Prompt for direct entry of access token
+        //     tokenPage(configurationData, callback);
+        // }
+    }
 };
+
+/**
+ * An empty page with completed configuration
+ */
+function noConfigNeeded(configurationData, callback) {
+    let connectorAppId = configurationData.installedAppId;
+    let configPage = {
+        page: {
+            pageId: 'mainPage',
+            name: 'All Configuration Complete',
+            nextPageId: null,
+            previousPageId: null,
+            complete: true,
+            sections: [
+                {
+                    name: "Test Note",
+                    settings: [
+                        {
+                            type: "PARAGRAPH",
+                            id: "text",
+                            name: "This app is in test mode. To use it you should enter your test access token from the Shelly developer site. "
+                        }
+                    ]
+                }
+            ]
+        }
+    };
+    log.response(callback, { statusCode: 200, configurationData: configPage});
+}
 
 // /**
 //  * Page that links to Shelly for login
