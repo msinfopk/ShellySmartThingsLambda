@@ -11,6 +11,11 @@ const shellyApiEndpoint = config.get('shelly.apiEndpoint');
 // const shellyOauthEndpoint = config.get('shelly.oauthEndpoint');
 // const shellyAccessToken = config.get('shelly.personalAccessToken');
 
+// Restrict all calls the Shelly API to one request per second
+var shellyAPIlimiter = new Bottleneck({
+    minTime: 1000
+});
+
 /**
  * Shelly API calls used by this application
  */
@@ -55,30 +60,7 @@ module.exports = {
      * @param token Shelly access token
      * @param callback Function called with list of Shelly devices
      */
-    listAllShellyDevices: function (token, callback) {
-        let options = {
-            method: 'POST',
-            uri: `${shellyApiEndpoint}/interface/device/list/`,
-            headers: {
-                // "Content-Type": "application/x-www-form-urlencoded",  // set automatically
-                "User-Agent": "SmartThings Integration"
-            },
-            form: {
-                auth_key: `${token}`
-            },
-            transform: function (body) {
-                let fullBody = JSON.parse(body);
-                log.info(body);
-                log.info(fullBody.device);
-                return fullBody.devices;
-            }
-        };
-        rp(options)
-            .then(function (data) {
-                callback(data);
-            })
-            .delay(1000);  // make sure we do not exceed the 1 request / second limit
-    },
+    listAllShellyDevices: shellyAPIlimiter.wrap(_listAllShellyDevices),
 
     /**
      * Returns the status of all Shelly devices
@@ -86,62 +68,16 @@ module.exports = {
      * @param token Shelly access token
      * @param callback Function called with list of Shelly devices
      */
-    getAllShellyDeviceStatuses: function (token, callback) {
-        let options = {
-            method: 'POST',
-            uri: `${shellyApiEndpoint}/device/all_status`,
-            headers: {
-                // "Content-Type": "application/x-www-form-urlencoded",  // set automatically
-                "User-Agent": "SmartThings Integration"
-            },
-            form: {
-                auth_key: `${token}`
-            },
-            transform: function (body) {
-                let fullBody = JSON.parse(body);
-                log.info(body);
-                log.info(fullBody.data.devices_status);
-                return fullBody.data.devices_status;
-            }
-        };
-        rp(options)
-            .then(function (data) {
-                callback(data);
-            })
-            .delay(1000);  // make sure we do not exceed the 1 request / second limit
-    },
+    getAllShellyDeviceStatuses: shellyAPIlimiter.wrap(_getAllShellyDeviceStatuses),
 
     /**
-     * Returns a description of a particular device
+     * Returns the status of a particular device
      *
      * @param token
      * @param externalId
      * @param callback
      */
-    getSingleShellyDeviceStatus: function (token, externalId, callback) {
-        let options = {
-            method: 'POST',
-            uri: `${shellyApiEndpoint}/device/status/`,
-            headers: {
-                // "Content-Type": "application/x-www-form-urlencoded",  // set automatically
-                "User-Agent": "SmartThings Integration"
-            },
-            form: {
-                auth_key: `${token}`,
-                id: `${externalId}`
-            },
-            transform: function (body) {
-                let fullBody = JSON.parse(body);
-                log.info(body);
-                log.info(fullBody.data.devices_status);
-                return fullBody.data.devices_status;
-            }
-        };
-        rp(options)
-            .then(function (data) {
-                callback(data);
-            });
-    },
+    getSingleShellyDeviceStatus: shellyAPIlimiter.wrap(_getSingleShellyDeviceStatus),
 
     /**
      * Set the state of a specific relay
@@ -152,41 +88,7 @@ module.exports = {
      * @param action
      * @param callback
      */
-    sendRelayCommand: function (token, externalId, relayAction, callback) {
-        let isCombinedRelay = externalId.indexOf("_") >= 0
-        if (isCombinedRelay) {
-            let shellyID = externalId.split()[0];
-            let relayChannel = externalId.split()[1];
-        } else {
-            let shellyID = externalId;
-            let relayChannel = 0;
-        }
-        let options = {
-            method: 'POST',
-            uri: `${shellyApiEndpoint}/device/relay/control`,
-            headers: {
-                // "Content-Type": "application/x-www-form-urlencoded",  // set automatically
-                "User-Agent": "SmartThings Integration"
-            },
-            form: {
-                auth_key: `${token}`,
-                id: `${externalId}`,
-                channel: `${relayChannel}`,
-                turn: `${relayAction}`
-            }
-        };
-        log.debug(`authorization=${options.headers.Authorization}`);
-        log.debug(`uri=${options.uri}`);
-        rp(options)
-            .then(function (data) {
-                if (data && callback) {
-                    callback(data);
-                }
-            })
-            .catch(function (err) {
-                log.error(`${err} sending commands to ${externalId}`)
-            });
-    },
+    sendRelayCommand: shellyAPIlimiter.wrap(_sendRelayCommand),
 
     /**
      * Given a device state object, returns a list of the events to initialize the state on the SmartThings platform.
@@ -194,11 +96,11 @@ module.exports = {
      * @returns List of event objects
      */
     allDeviceEvents(shellyDeviceStatus, shellyChannel) {
-        return fullEventList(shellyDeviceStatus, shellyChannel);
+        return shellyStatusToSTEvent(shellyDeviceStatus, shellyChannel);
     },
 
     initialDeviceEvents(shellyDeviceStatus, shellyChannel) {
-        let events = fullEventList(shellyDeviceStatus, shellyChannel);
+        let events = shellyStatusToSTEvent(shellyDeviceStatus, shellyChannel);
         /*
         events.push({
             component: "main",
@@ -211,7 +113,120 @@ module.exports = {
     }
 };
 
-function fullEventList(shellyDeviceStatus, shellyChannel) {
+
+function _listAllShellyDevices(token, callback) {
+    let options = {
+        method: 'POST',
+        uri: `${shellyApiEndpoint}/interface/device/list/`,
+        headers: {
+            // "Content-Type": "application/x-www-form-urlencoded",  // set automatically
+            "User-Agent": "SmartThings Integration"
+        },
+        form: {
+            auth_key: `${token}`
+        },
+        transform: function (body) {
+            let fullBody = JSON.parse(body);
+            log.info(`SHELLY RESPONSE: ${JSON.stringify(fullBody, null, 2)}`);
+            return fullBody.data.devices;
+        }
+    };
+    rp(options)
+        .then(function (data) {
+            callback(data);
+        });
+}
+
+
+function _getAllShellyDeviceStatuses(token, callback) {
+    let options = {
+        method: 'POST',
+        uri: `${shellyApiEndpoint}/device/all_status`,
+        headers: {
+            // "Content-Type": "application/x-www-form-urlencoded",  // set automatically
+            "User-Agent": "SmartThings Integration"
+        },
+        form: {
+            auth_key: `${token}`
+        },
+        transform: function (body) {
+            let fullBody = JSON.parse(body);
+            log.info(`SHELLY RESPONSE: ${JSON.stringify(fullBody, null, 2)}`);
+            return fullBody.data.devices_status;
+        }
+    };
+    rp(options)
+        .then(function (data) {
+            callback(data);
+        });
+}
+
+
+function _getSingleShellyDeviceStatus(token, externalId, callback) {
+    let options = {
+        method: 'POST',
+        uri: `${shellyApiEndpoint}/device/status/`,
+        headers: {
+            // "Content-Type": "application/x-www-form-urlencoded",  // set automatically
+            "User-Agent": "SmartThings Integration"
+        },
+        form: {
+            auth_key: `${token}`,
+            id: `${externalId}`
+        },
+        transform: function (body) {
+            let fullBody = JSON.parse(body);
+            log.info(`SHELLY RESPONSE: ${JSON.stringify(fullBody, null, 2)}`);
+            log.info(`DATA: ${JSON.stringify(fullBody.data, null, 2)}`);
+            log.info(`RETURNING: ${JSON.stringify(fullBody.data.devices_status, null, 2)}`);
+            return fullBody.data.devices_status;
+        }
+    };
+    rp(options)
+        .then(function (data) {
+            callback(data);
+        });
+}
+
+
+function _sendRelayCommand(token, externalId, relayAction, callback) {
+    let isCombinedRelay = externalId.indexOf("_") >= 0
+    if (isCombinedRelay) {
+        let shellyID = externalId.split()[0];
+        let relayChannel = externalId.split()[1];
+    } else {
+        let shellyID = externalId;
+        let relayChannel = 0;
+    }
+    let options = {
+        method: 'POST',
+        uri: `${shellyApiEndpoint}/device/relay/control`,
+        headers: {
+            // "Content-Type": "application/x-www-form-urlencoded",  // set automatically
+            "User-Agent": "SmartThings Integration"
+        },
+        form: {
+            auth_key: `${token}`,
+            id: `${externalId}`,
+            channel: `${relayChannel}`,
+            turn: `${relayAction}`
+        }
+    };
+    log.debug(`authorization=${options.headers.Authorization}`);
+    log.debug(`uri=${options.uri}`);
+    rp(options)
+        .then(function (data) {
+            if (data && callback) {
+                callback(data);
+            }
+        })
+        .catch(function (err) {
+            log.error(`${err} sending commands to ${externalId}`)
+        });
+}
+
+
+function shellyStatusToSTEvent(shellyDeviceStatus, shellyChannel) {
     const healthStatus = shellyDeviceStatus.cloud.connected ? "online" : "offline";
     const relayStatus = shellyDeviceStatus.relays[shellyChannel].ison ? "on" : "off";
     return [
