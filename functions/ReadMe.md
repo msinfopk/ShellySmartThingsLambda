@@ -3,7 +3,7 @@
 This is a fully cloud-to-cloud connection between [Shelly](https://shelly-api-docs.shelly.cloud/#shelly1-1pm-status) devices and SmartThings.  It is written as a SmartApp operating by way of an AWS lambda function.  As this is fully cloud-to-cloud, a SmartThings hub is *not* required and your Shelly's *must* be running "stock" firmware and configured to be cloud accessible (ie, with MQTT disabled).
 
 Set-up Instructions:
-See the ReadMe in the functions folder
+See the ReadMe in the connector folder
 
 Current limitations:
 - Only Shelly 1/PM and Shelly 2.5 are supported
