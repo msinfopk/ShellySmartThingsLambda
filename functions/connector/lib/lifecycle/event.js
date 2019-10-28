@@ -201,19 +201,20 @@ module.exports = {
         st.listDevices(token, eventData.installedApp.locationId, eventData.installedApp.installedAppId).then(function (smartThingsDevices) {
             // let shellyAccessToken = util.shellyAccessToken(state, eventData.installedApp.config);
             shelly.getAllShellyDeviceStatuses(shellyAccessToken, function (shellyDeviceStatuses) {
-                shellyDeviceStatuses.forEach(function (shellyDeviceStatus) {
+                for (var id in shellyDeviceStatuses) {
+                    log.trace(`Current Device Status: ${JSON.stringify(shellyDeviceStatuses[id], null, 2)}`);
                     shellyDevice.relays.forEach(function (thisRelay, thisRelayChannel) {
-                        let smartThingsID = shellyDevice.id;
+                        let smartThingsID = id;
                         if (thisRelayChannel > 0) {
-                            let smartThingsID = shellyDevice.id + "_" + thisRelayChannel;
+                            smartThingsID = id + "_" + thisRelayChannel;
                         }
                         let smartThingsDevice = smartThingsDevices.find(function (d) { return d.app.externalId == smartThingsID; });
                         if (smartThingsDevice) {
-                            log.debug(`Sending events for ${shellyDevice.id}`);
-                            st.sendEvents(eventData.authToken, device.deviceId, shelly.allDeviceEvents(shellyDeviceStatus, thisRelayChannel))
+                            log.debug(`Sending events for ${id}`);
+                            st.sendEvents(eventData.authToken, device.deviceId, shelly.allDeviceEvents(shellyDeviceStatuses[id], thisRelayChannel))
                         }
                     });
-                });
+                }
             });
             shelly.listAllShellyDevices(shellyAccessToken, function (shellyDevices) {
                 util.reconcileDeviceLists(token, eventData.installedApp.locationId, eventData.installedApp.installedAppId, shellyDevices, smartThingsDevices);

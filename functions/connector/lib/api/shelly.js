@@ -3,6 +3,7 @@
 const qs = require('querystring');
 const rp = require('request-promise');
 const log = require('../local/log');
+var Bottleneck = require("bottleneck");
 
 const config = require('config');
 // const shellyClientId = config.get('shelly.clientId');

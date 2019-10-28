@@ -24,28 +24,29 @@ module.exports = {
      */
     reconcileDeviceLists: function (token, locationId, installedAppId, shellyDeviceList, smartThingsDevices) {
         // Iterate over the Shelly devices to see if any are missing from SmartThings and need to be added
-        log.debug(`Reconciling with Shelly List: ${shellyDeviceList}`);
-        shellyDeviceList.forEach(function (shellyDevice) {
-            if (!smartThingsDevices.find(function (shellyDevice) { return device.app.externalId == shellyDevice.id; })) {
+        log.info(`Reconciling with Shelly List: ${JSON.stringify(shellyDeviceList, null, 2)}`);
+        for (var id in shellyDeviceList) {
+            log.trace(`Current Device: ${JSON.stringify(shellyDeviceList[id], null, 2)}`);
+            if (!smartThingsDevices.find(function (shellyDevice) { return device.app.externalId == id; })) {
 
                 // Device from Shelly not found in SmartThings, add it
                 let map = {
-                    label: shellyDevice.name,
-                    profileId: deviceProfileId(shellyDeviceInfo),
+                    label: shellyDeviceList[id].name,
+                    profileId: deviceProfileId(shellyDeviceList[id]),
                     locationId: locationId,
                     installedAppId: installedAppId,
-                    externalId: shellyDevice.id
+                    externalId: id
                 };
 
-                let isCombinedRelay = shellyDevice.id.indexOf("_") >= 0
-                if (isCombinedRelay) {
-                    let relayChannel = externalId.split()[1];
-                } else {
-                    let relayChannel = 0;
+                let relayChannel = 0;
+                let combinedId = id
+                if (shellyDevice.id.indexOf('_') >= 0) {
+                    combinedId = id.split('_')[0];
+                    relayChannel = id.split('_')[1];
                 }
 
                 // Need to get the current status to get the events
-                shelly.getSingleShellyDeviceStatus(shellyAccessToken, shellyDevice.id, function (shellyDeviceStatus) {
+                shelly.getSingleShellyDeviceStatus(shellyAccessToken, combinedId, function (shellyDeviceStatus) {
                     st.createDevice(token, map).then(function (data) {
                         log.debug("created device " + data.deviceId);
                         log.info(JSON.stringify(shelly.initialDeviceEvents(shellyDeviceStatus, relayChannel)));
@@ -55,7 +56,7 @@ module.exports = {
                     });
                 });
             }
-        });
+        }
 
         // Iterate over all shelly devices in SmartThings and delete any that are missing from Shelly
         smartThingsDevices.forEach(function (device) {
