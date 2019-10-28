@@ -38,7 +38,7 @@ module.exports = {
                 "Authorization": "Bearer " + token
             },
             body: JSON.stringify(body),
-            transform: function(body, response, resolveWithFullResponse) {
+            transform: function (body, response, resolveWithFullResponse) {
                 return JSON.parse(body)
             }
         };
@@ -84,8 +84,8 @@ module.exports = {
             },
             body: JSON.stringify(events)
         };
-        return rp(options).catch(function(err) {
-            log.error(`${err} sending events for device ${deviceId}`)
+        return rp(options).catch(function (err) {
+            log.error(`On sending events for device ${deviceId}:\n${err}`)
         })
     },
 
@@ -101,7 +101,7 @@ module.exports = {
     listDevices(token, locationId, installedSmartAppId) {
         log.debug(`list(${installedSmartAppId})`);
         let isa = installedSmartAppId
-        let url  = `${apiEndpoint}/devices?locationId=${locationId}`;
+        let url = `${apiEndpoint}/devices?locationId=${locationId}`;
         let opts = {
             url: url,
             method: 'GET',
@@ -110,13 +110,13 @@ module.exports = {
                 "Content-Type": "application/json; charset=utf-8",
                 'Authorization': 'Bearer ' + token
             },
-            transform: function(body, response, resolveWithFullResponse) {
-                log.debug(`list=${body}`)
+            transform: function (body, response, resolveWithFullResponse) {
+                log.debug(`SmartThings Device List: ${JSON.stringify(body, null, 2)}`)
                 let result = [];
                 let data = body; //JSON.parse(body)
                 if (data.items) {
                     let size = data.items.length;
-                    for (let i=0; i < data.items.length; i++) {
+                    for (let i = 0; i < data.items.length; i++) {
                         let it = data.items[i];
                         if (it.app) {
                             if (it.app.installedAppId == isa) {
@@ -157,7 +157,8 @@ module.exports = {
                 "Authorization": "Bearer " + token
             },
             body: JSON.stringify(body),
-            transform: function(body, response, resolveWithFullResponse) {
+            transform: function (body, response, resolveWithFullResponse) {
+                log.trace(`createSchedule: ${JSON.stringify(body, null, 2)}`);
                 return JSON.parse(body)
             }
         };
@@ -188,7 +189,7 @@ module.exports = {
                 "Authorization": "Bearer " + token
             },
             body: JSON.stringify(body),
-            transform: function(body, response, resolveWithFullResponse) {
+            transform: function (body, response, resolveWithFullResponse) {
                 return JSON.parse(body)
             }
         };
@@ -219,7 +220,7 @@ module.exports = {
                 "Authorization": "Bearer " + token
             },
             body: JSON.stringify(body),
-            transform: function(body, response, resolveWithFullResponse) {
+            transform: function (body, response, resolveWithFullResponse) {
                 return JSON.parse(body)
             }
         };

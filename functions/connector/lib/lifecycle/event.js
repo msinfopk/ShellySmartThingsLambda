@@ -203,7 +203,7 @@ module.exports = {
             shelly.getAllShellyDeviceStatuses(shellyAccessToken, function (shellyDeviceStatuses) {
                 for (var id in shellyDeviceStatuses) {
                     log.trace(`Current Device Status: ${JSON.stringify(shellyDeviceStatuses[id], null, 2)}`);
-                    shellyDevice.relays.forEach(function (thisRelay, thisRelayChannel) {
+                    shellyDeviceStatuses[id].relays.forEach(function (thisRelay, thisRelayChannel) {
                         let smartThingsID = id;
                         if (thisRelayChannel > 0) {
                             smartThingsID = id + "_" + thisRelayChannel;
@@ -211,7 +211,7 @@ module.exports = {
                         let smartThingsDevice = smartThingsDevices.find(function (d) { return d.app.externalId == smartThingsID; });
                         if (smartThingsDevice) {
                             log.debug(`Sending events for ${id}`);
-                            st.sendEvents(eventData.authToken, device.deviceId, shelly.allDeviceEvents(shellyDeviceStatuses[id], thisRelayChannel))
+                            st.sendEvents(eventData.authToken, smartThingsDevice.deviceId, shelly.allDeviceEvents(shellyDeviceStatuses[id], thisRelayChannel))
                         }
                     });
                 }

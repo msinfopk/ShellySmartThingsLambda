@@ -13,11 +13,11 @@ module.exports = {
      *
      * @param oauthCallbackData
      */
-    handleOauthCallback: function(oauthCallbackData) {
-        lifx.handleOauthCallback(oauthCallbackData.installedAppId, oauthCallbackData.urlPath).then(function(data) {
+    handleOauthCallback: function (oauthCallbackData) {
+        lifx.handleOauthCallback(oauthCallbackData.installedAppId, oauthCallbackData.urlPath).then(function (data) {
             log.debug("RES BODY=" + JSON.stringify(data));
-            db.put(oauthCallbackData.installedAppId, {lifxAccessToken: data.access_token, lifxRefreshToken: data.refresh_token});
-        }).catch(function(err) {
+            db.put(oauthCallbackData.installedAppId, { lifxAccessToken: data.access_token, lifxRefreshToken: data.refresh_token });
+        }).catch(function (err) {
             log.error(`RES ERR =${err}`);
         });
     }

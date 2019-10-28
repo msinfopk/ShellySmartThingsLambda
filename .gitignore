@@ -14,6 +14,9 @@ project.json
 .idea
 *.iml
 
+# VSCode
+.vscode
+
 # Runtime data
 pids
 *.pid
@@ -69,5 +72,8 @@ typings/
 # next.js build output
 .next
 
-Customized config file
-functions/connector/config/default.json
+# Customized config file
+*/config/default.json
+
+# Compressed library - for lambda upload
+*.zip

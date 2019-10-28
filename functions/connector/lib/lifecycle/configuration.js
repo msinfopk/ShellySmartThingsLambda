@@ -34,7 +34,7 @@ module.exports = {
     /**
      * Return the configuration page for the app - the link to log into Shelly
      */
-    page: function(configurationData, callback) {
+    page: function (configurationData, callback) {
         noConfigNeeded(configurationData, callback);
         // if (shellyClientId) {
         //     if (state && state.shellyAccessToken) {
@@ -75,7 +75,7 @@ function noConfigNeeded(configurationData, callback) {
             ]
         }
     };
-    log.response(callback, { statusCode: 200, configurationData: configPage});
+    log.response(callback, { statusCode: 200, configurationData: configPage });
 }
 
 // /**

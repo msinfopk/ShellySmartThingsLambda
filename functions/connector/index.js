@@ -12,7 +12,7 @@ exports.handle = (evt, context, callback) => {
         // PING happens during app creation. Respond with challenge to verify app
         case 'PING': {
             log.info(`${evt.lifecycle}\nREQUEST: ${JSON.stringify(evt, null, 2)}`);
-            log.response(callback, {statusCode: 200, pingData: {challenge: evt.pingData.challenge}});
+            log.response(callback, { statusCode: 200, pingData: { challenge: evt.pingData.challenge } });
             break;
         }
 
@@ -47,7 +47,7 @@ exports.handle = (evt, context, callback) => {
             log.info(`${evt.lifecycle}\nREQUEST: ${JSON.stringify(evt, null, 2)}`);
             crudLifecycle.install(evt.installData);
             log.info(`RESPONSE: ${JSON.stringify(evt, null, 2)}`);
-            log.response(callback, {statusCode: 200, installData: {}});
+            log.response(callback, { statusCode: 200, installData: {} });
             break;
         }
 
@@ -55,7 +55,7 @@ exports.handle = (evt, context, callback) => {
             log.info(`${evt.lifecycle}\nREQUEST: ${JSON.stringify(evt, null, 2)}`);
             crudLifecycle.update(evt.updateData);
             log.info(`RESPONSE: ${JSON.stringify(evt, null, 2)}`);
-            log.response(callback, {statusCode: 200, updateData: {}});
+            log.response(callback, { statusCode: 200, updateData: {} });
             break;
         }
 
@@ -63,13 +63,13 @@ exports.handle = (evt, context, callback) => {
             log.info(`${evt.lifecycle}\nREQUEST: ${JSON.stringify(evt, null, 2)}`);
             crudLifecycle.uninstall(evt.uninstallData);
             log.info(`RESPONSE: ${JSON.stringify(evt, null, 2)}`);
-            log.response(callback, {statusCode: 200, uninstallData: {}});
+            log.response(callback, { statusCode: 200, uninstallData: {} });
             break;
         }
 
         case 'EVENT': {
             log.info(`${evt.lifecycle}\nREQUEST: ${JSON.stringify(evt, null, 2)}`);
-            evt.eventData.events.forEach(function(event) {
+            evt.eventData.events.forEach(function (event) {
                 switch (event.eventType) {
                     case "DEVICE_EVENT": {
                         break;
@@ -87,7 +87,7 @@ exports.handle = (evt, context, callback) => {
                     }
                 }
             });
-            log.response(callback, {statusCode: 200, eventData: {}});
+            log.response(callback, { statusCode: 200, eventData: {} });
             break;
         }
 
